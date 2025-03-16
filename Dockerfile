@@ -1,14 +1,20 @@
-# Verwende ein OpenJDK-Image für Java
-FROM openjdk:23
+# Stage 1: Build
+FROM maven:3.8.7-openjdk-17 as build
 
-# Setze das Arbeitsverzeichnis im Container
 WORKDIR /app
 
-# Kopiere das gebaute JAR-File in den Container
-COPY target/*.jar app.jar
+COPY pom.xml .
+COPY src ./src
 
-# Exponiere Port 8080 für den Zugriff auf die Anwendung
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run
+FROM openjdk:17
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Starte die Spring Boot App
 CMD ["java", "-jar", "app.jar"]
